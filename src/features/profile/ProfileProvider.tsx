@@ -10,6 +10,7 @@ export const MAX_NAME_LENGTH = 20;
 type ProfileContextValue = {
   profile: Profile;
   rename: (name: string) => boolean;
+  addXp: (amount: number) => boolean;
 };
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -36,7 +37,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [profile],
   );
 
-  const value = useMemo(() => ({ profile, rename }), [profile, rename]);
+  const addXp = useCallback(
+    (amount: number) => {
+      if (!(amount > 0)) return true;
+      const next = { ...profile, xp: profile.xp + Math.floor(amount) };
+      setProfile(next);
+      return writeJson(KEY, next);
+    },
+    [profile],
+  );
+
+  const value = useMemo(() => ({ profile, rename, addXp }), [profile, rename, addXp]);
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
 

@@ -1,15 +1,21 @@
-import { useMemo } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import type { GameId } from '@/games/registry';
-import { readJson } from '@/storage/kv';
+import { loadProgress } from './progressStore';
 
 export type GameProgress = { level: number; bestScore: number | null };
 
+function read(id: GameId): GameProgress {
+  const p = loadProgress(id);
+  return { level: p.level, bestScore: p.bestScore };
+}
+
 export function useGameProgress(id: GameId): GameProgress {
-  return useMemo(() => {
-    const raw = readJson<Partial<GameProgress>>(`progress.${id}.v1`, {});
-    return {
-      level: typeof raw.level === 'number' && raw.level >= 1 ? Math.floor(raw.level) : 1,
-      bestScore: typeof raw.bestScore === 'number' ? raw.bestScore : null,
-    };
-  }, [id]);
+  const [progress, setProgress] = useState<GameProgress>(() => read(id));
+  useFocusEffect(
+    useCallback(() => {
+      setProgress(read(id));
+    }, [id]),
+  );
+  return progress;
 }
