@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "plexton",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "package": "com.thekami.plextongame",
       "adaptiveIcon": {
@@ -28,6 +25,16 @@
           "backgroundColor": "#5B3DF5",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
         }
       ]
     ],
