@@ -1,13 +1,13 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { baseTargetForLevel, generateNumberMergeLevel, validateNumberMergeLevel } from '../generator';
+import { generateNumberMergeLevel, poolForLevel, targetForLevel, validateNumberMergeLevel } from '../generator';
 
 jest.setTimeout(120000);
 
 describe('numberMerge generator', () => {
-  it('produces valid, solvable levels for early levels', () => {
-    for (let level = 1; level <= 6; level += 1) {
-      const generated = generateNumberMergeLevel(level, 3);
-      const result = validateNumberMergeLevel(generated);
+  it('produces valid, solvable levels', () => {
+    for (const level of [1, 2, 3, 5, 9, 13]) {
+      const g = generateNumberMergeLevel(level, 3);
+      const result = validateNumberMergeLevel(g);
       expect(result.reasons).toEqual([]);
       expect(result.valid).toBe(true);
     }
@@ -24,13 +24,14 @@ describe('numberMerge generator', () => {
     expect(easy.config.maxMoves).toBeGreaterThan(hard.config.maxMoves);
   });
 
-  it('rejects a tampered level', () => {
+  it('rejects tampered levels', () => {
     const g = generateNumberMergeLevel(1, 3);
-    const bad = { ...g, config: { ...g.config, maxMoves: 1 } };
-    expect(validateNumberMergeLevel(bad).valid).toBe(false);
+    expect(validateNumberMergeLevel({ ...g, config: { ...g.config, maxMoves: 1 } }).valid).toBe(false);
+    expect(validateNumberMergeLevel({ ...g, solution: [...g.solution.slice(0, -1)] }).valid).toBe(false);
   });
 
-  it('scales the target with level', () => {
-    expect(baseTargetForLevel(1)).toBeLessThan(baseTargetForLevel(13));
+  it('scales target and spawn pool with level', () => {
+    expect(targetForLevel(1)).toBeLessThan(targetForLevel(13));
+    expect(poolForLevel(1).length).toBeLessThan(poolForLevel(13).length);
   });
 });

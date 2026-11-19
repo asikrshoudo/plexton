@@ -18,7 +18,7 @@ type Props = {
 export function ResultPanel({ won, level, score, xp, lossReason, accent, onAgain, onHome }: Props) {
   return (
     <Card style={styles.card} accessibilityLiveRegion="polite">
-      <AppText variant="title">{won ? `Level ${level} cleared!` : 'Out of moves'}</AppText>
+      <AppText variant="title">{won ? `Level ${level} cleared!` : 'Not this time'}</AppText>
       <AppText tone="muted">
         {won ? `Score ${score}${xp > 0 ? `  ·  +${xp} XP` : ''}` : `${lossReason} Score ${score}. Try again, same level.`}
       </AppText>

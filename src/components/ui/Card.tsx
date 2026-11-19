@@ -6,13 +6,23 @@ type Props = ViewProps & { style?: StyleProp<ViewStyle> };
 
 export function Card({ style, ...rest }: Props) {
   const { palette } = useTheme();
-  return <View {...rest} style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }, style]} />;
+  return (
+    <View
+      {...rest}
+      style={[
+        styles.card,
+        { backgroundColor: palette.surface, borderColor: palette.border, borderBottomColor: palette.edge },
+        style,
+      ]}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
+    borderBottomWidth: 4,
     padding: spacing.lg,
   },
 });

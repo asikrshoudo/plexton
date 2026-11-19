@@ -3,6 +3,7 @@ export type Palette = {
   surface: string;
   surfaceAlt: string;
   border: string;
+  edge: string;
   text: string;
   textMuted: string;
   primary: string;
@@ -13,12 +14,13 @@ export type Palette = {
 };
 
 export const lightPalette: Palette = {
-  bg: '#FFF8EE',
+  bg: '#FFF6E5',
   surface: '#FFFFFF',
-  surfaceAlt: '#F3EBDC',
-  border: '#EBE3D3',
-  text: '#1B1A2E',
-  textMuted: '#6B6882',
+  surfaceAlt: '#F1E7D2',
+  border: '#E6DAC0',
+  edge: '#DCCDAA',
+  text: '#1F1B3A',
+  textMuted: '#6E6A86',
   primary: '#5B3DF5',
   onPrimary: '#FFFFFF',
   ink: '#1B1A2E',
@@ -31,6 +33,7 @@ export const darkPalette: Palette = {
   surface: '#1E1D2E',
   surfaceAlt: '#2A2940',
   border: '#2F2E45',
+  edge: '#0D0C16',
   text: '#F4F2FF',
   textMuted: '#A09DBB',
   primary: '#8A74FF',

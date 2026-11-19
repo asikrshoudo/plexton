@@ -1,13 +1,14 @@
 import { router, type Href } from 'expo-router';
 import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
-import { GameBadge } from '@/components/game/GameBadge';
+import { StyleSheet, View } from 'react-native';
+import { GameArt } from '@/components/game/GameArt';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { formatDayLabel, gameForDay, todayKey } from '@/features/daily/daily';
-import { spacing } from '@/theme/tokens';
+import { shade } from '@/theme/shade';
+import { radius, spacing } from '@/theme/tokens';
 
 export default function DailyScreen() {
   const { game, label } = useMemo(() => ({ game: gameForDay(todayKey()), label: formatDayLabel() }), []);
@@ -15,7 +16,9 @@ export default function DailyScreen() {
   return (
     <Screen title="Daily Challenge">
       <Card style={styles.card}>
-        <GameBadge glyph={game.glyph} accent={game.accent} size={64} />
+        <View style={[styles.art, { backgroundColor: game.accent, borderBottomColor: shade(game.accent, -0.2) }]}>
+          <GameArt id={game.id} size={96} />
+        </View>
         <AppText variant="caption" tone="muted">
           {label.toUpperCase()}
         </AppText>
@@ -25,15 +28,12 @@ export default function DailyScreen() {
           challenges, streaks and rewards arrive once gameplay ships.
         </AppText>
       </Card>
-      <Button
-        label={`Open ${game.name}`}
-        accent={game.accent}
-        onPress={() => router.push(`/game/${game.id}` as Href)}
-      />
+      <Button label={`Open ${game.name}`} accent={game.accent} onPress={() => router.push(`/game/${game.id}` as Href)} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   card: { gap: spacing.md },
+  art: { height: 150, borderRadius: radius.md, borderBottomWidth: 4, alignItems: 'center', justifyContent: 'center' },
 });

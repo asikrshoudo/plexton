@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Board } from '@/components/numberMerge/Board';
 import { ResultPanel } from '@/components/numberMerge/ResultPanel';
+import { TileFace } from '@/components/numberMerge/TileView';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -11,7 +12,7 @@ import { StatTile } from '@/components/ui/StatTile';
 import { useProfile } from '@/features/profile/ProfileProvider';
 import { loadProgress, recordResult } from '@/features/progress/progressStore';
 import { getGame } from '@/games/registry';
-import { canMove } from '@/games/numberMerge/logic';
+import { canMerge, spawnValue } from '@/games/numberMerge/logic';
 import { useNumberMergeGame } from '@/games/numberMerge/useNumberMergeGame';
 import { spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
@@ -25,7 +26,7 @@ function NumberMergeGame({ level, tier, onAgain }: { level: number; tier: number
   const [xp, setXp] = useState(0);
   const [saveFailed, setSaveFailed] = useState(false);
 
-  const { phase, generated, board, swipe } = useNumberMergeGame({
+  const { phase, generated, board, drop } = useNumberMergeGame({
     level,
     tier,
     onFinish: (result) => {
@@ -36,9 +37,10 @@ function NumberMergeGame({ level, tier, onAgain }: { level: number; tier: number
     },
   });
 
-  const movesLeft = generated && board ? Math.max(0, generated.config.maxMoves - board.moves) : null;
+  const movesLeft = generated && board ? Math.max(0, generated.config.maxMoves - board.moves) : 0;
   const finished = phase === 'won' || phase === 'lost';
-  const lossReason = board && !canMove(board) ? 'The board is full.' : 'You used all your moves.';
+  const lossReason = board && !canMerge(board) ? 'No matching pair is left.' : 'You used all your moves.';
+  const nextValue = generated && board ? spawnValue(generated.config.seed, board.nextId, generated.config.pool) : 0;
 
   return (
     <ScrollView
@@ -49,6 +51,7 @@ function NumberMergeGame({ level, tier, onAgain }: { level: number; tier: number
         paddingHorizontal: spacing.lg,
         gap: spacing.lg,
       }}
+      scrollEnabled={phase !== 'playing'}
       showsVerticalScrollIndicator={false}>
       <ScreenHeader title={`Number Merge · Level ${level}`} />
 
@@ -74,7 +77,7 @@ function NumberMergeGame({ level, tier, onAgain }: { level: number; tier: number
             <StatTile label="Target" value={String(generated.config.target)} />
           </View>
 
-          <Board board={board} onSwipe={swipe} />
+          <Board board={board} disabled={finished} onDrop={drop} />
 
           {finished ? (
             <>
@@ -92,8 +95,14 @@ function NumberMergeGame({ level, tier, onAgain }: { level: number; tier: number
             </>
           ) : (
             <>
+              <View style={styles.next} accessible accessibilityLabel={`Next new tile: ${nextValue}`}>
+                <AppText variant="label" tone="muted">
+                  Next tile
+                </AppText>
+                <TileFace value={nextValue} cell={40} />
+              </View>
               <AppText variant="label" tone="muted" style={styles.hint}>
-                Swipe to slide tiles. Merge equal numbers to reach {generated.config.target}.
+                Drag a tile onto one with the same number.
               </AppText>
               <Button label="Restart level" variant="secondary" onPress={onAgain} />
             </>
@@ -121,5 +130,6 @@ export default function NumberMergeScreen() {
 const styles = StyleSheet.create({
   center: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xxl },
   stats: { flexDirection: 'row', gap: spacing.md },
+  next: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   hint: { textAlign: 'center' },
 });

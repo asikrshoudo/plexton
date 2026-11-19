@@ -15,15 +15,15 @@ export const GAMES: readonly GameMeta[] = [
   {
     id: 'numberMerge',
     name: 'Number Merge',
-    tagline: 'Slide, match, grow.',
-    description: 'Slide tiles across the board and merge equal numbers to build bigger ones.',
+    tagline: 'Drag, match, grow.',
+    description: 'Drag a tile onto an equal one to merge them into a bigger number.',
     glyph: '8',
     accent: '#FF8A3D',
     howToPlay: [
-      'Swipe in any direction to slide every tile.',
-      'When two tiles with the same number touch, they merge into one.',
-      'Plan your moves so the board never fills up.',
-      'Reach the level target to clear the level.',
+      'Press and hold a tile, then drag it onto a tile with the same number.',
+      'Equal tiles merge into one tile with double the value.',
+      'Every merge adds a new tile nearby, and the next tile value is always shown.',
+      'Reach the target number before you run out of moves or matching pairs.',
     ],
   },
   {

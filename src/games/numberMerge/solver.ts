@@ -1,74 +1,39 @@
-import { createInitialState, DIRECTIONS, maxTile, move, type BoardState, type Direction } from './logic';
+import { spawnValue } from './logic';
 
+export type SolveInput = { seed: number; pool: readonly number[]; startTiles: number; target: number };
 
-const DEPTH = 2;
+// Tile positions never affect which merges are possible, so solving works on the multiset of values.
+// Returns the value merged at each step, or null when no solution is found within the limits.
+export function solve({ seed, pool, startTiles, target }: SolveInput, cap: number, nodeBudget = 40000): number[] | null {
+  const start = Array.from({ length: startTiles }, (_, i) => spawnValue(seed, i + 1, pool)).sort((a, b) => a - b);
+  const dead = new Set<string>();
+  const path: number[] = [];
+  let nodes = 0;
 
-function evaluate(s: BoardState): number {
-  const size = s.size;
-  const grid = new Array<number>(size * size).fill(0);
-  let maxV = 0;
-  let maxIdx = 0;
-  for (const t of s.tiles) {
-    const i = t.row * size + t.col;
-    grid[i] = t.value;
-    if (t.value > maxV) {
-      maxV = t.value;
-      maxIdx = i;
+  const dfs = (values: number[], step: number): boolean => {
+    if (values[values.length - 1] >= target) return true;
+    if (step >= cap) return false;
+    const key = `${step}|${values.join(',')}`;
+    if (dead.has(key)) return false;
+    nodes += 1;
+    if (nodes > nodeBudget) return false;
+
+    const dupes: number[] = [];
+    for (let i = values.length - 1; i > 0; i -= 1) {
+      if (values[i] === values[i - 1] && dupes[dupes.length - 1] !== values[i]) dupes.push(values[i]);
     }
-  }
-  const empties = size * size - s.tiles.length;
-  let pairs = 0;
-  for (let r = 0; r < size; r += 1) {
-    for (let c = 0; c < size; c += 1) {
-      const i = r * size + c;
-      const v = grid[i];
-      if (v === 0) continue;
-      if (c + 1 < size && grid[i + 1] === v) pairs += 1;
-      if (r + 1 < size && grid[i + size] === v) pairs += 1;
+    for (const v of dupes) {
+      const next = values.slice();
+      next.splice(next.indexOf(v), 2, v * 2);
+      next.push(spawnValue(seed, startTiles + 1 + step, pool));
+      next.sort((a, b) => a - b);
+      path.push(v);
+      if (dfs(next, step + 1)) return true;
+      path.pop();
     }
-  }
-  const corners = [0, size - 1, size * (size - 1), size * size - 1];
-  const logMax = Math.log2(maxV || 1);
-  return empties * 10 + pairs * 3 + logMax * 5 + (corners.includes(maxIdx) ? logMax * 4 : 0);
-}
+    dead.add(key);
+    return false;
+  };
 
-function lookahead(s: BoardState, depth: number, target: number): number {
-  if (maxTile(s) >= target) return 1e5;
-  if (depth === 0) return evaluate(s);
-  let best = -1e6;
-  for (const d of DIRECTIONS) {
-    const r = move(s, d);
-    if (!r.moved) continue;
-    const v = lookahead(r.state, depth - 1, target);
-    if (v > best) best = v;
-  }
-  return best;
-}
-
-export type SolveInput = { size: number; seed: number; startTiles: number; target: number };
-
-// Plays the real rules (spawns are deterministic), so a returned path is an exact solution.
-export function solve({ size, seed, startTiles, target }: SolveInput, cap: number): Direction[] | null {
-  let state = createInitialState(size, seed, startTiles);
-  const path: Direction[] = [];
-  while (path.length < cap) {
-    if (maxTile(state) >= target) return path;
-    let bestDir: Direction | null = null;
-    let bestState: BoardState | null = null;
-    let bestVal = -Infinity;
-    for (const d of DIRECTIONS) {
-      const r = move(state, d);
-      if (!r.moved) continue;
-      const v = lookahead(r.state, DEPTH - 1, target);
-      if (v > bestVal) {
-        bestVal = v;
-        bestDir = d;
-        bestState = r.state;
-      }
-    }
-    if (!bestDir || !bestState) return null;
-    path.push(bestDir);
-    state = bestState;
-  }
-  return maxTile(state) >= target ? path : null;
+  return dfs(start, 0) ? path.slice() : null;
 }

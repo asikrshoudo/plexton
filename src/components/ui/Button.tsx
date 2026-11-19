@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { shade } from '@/theme/shade';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { PressableScale } from './PressableScale';
@@ -14,7 +15,9 @@ type Props = {
 
 export function Button({ label, onPress, variant = 'primary', disabled = false, accent }: Props) {
   const { palette } = useTheme();
-  const bg = disabled ? palette.surfaceAlt : variant === 'primary' ? (accent ?? palette.primary) : 'transparent';
+  const base = accent ?? palette.primary;
+  const bg = disabled ? palette.surfaceAlt : variant === 'primary' ? base : palette.surface;
+  const edge = disabled || variant === 'secondary' ? palette.edge : shade(base, -0.25);
   const fg = disabled
     ? palette.textMuted
     : variant === 'primary'
@@ -32,7 +35,13 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
       accessibilityState={{ disabled }}
       style={[
         styles.base,
-        { backgroundColor: bg, borderColor: variant === 'secondary' ? palette.border : 'transparent' },
+        {
+          backgroundColor: bg,
+          borderColor: palette.border,
+          borderWidth: variant === 'secondary' ? 1.5 : 0,
+          borderBottomWidth: 5,
+          borderBottomColor: edge,
+        },
       ]}>
       <AppText variant="heading" color={fg}>
         {label}
@@ -43,9 +52,8 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: MIN_TOUCH + 4,
+    minHeight: MIN_TOUCH + 8,
     borderRadius: radius.md,
-    borderWidth: 1.5,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',

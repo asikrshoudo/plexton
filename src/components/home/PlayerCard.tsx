@@ -18,7 +18,7 @@ export function PlayerCard() {
       onPress={() => router.push('/profile')}
       accessibilityRole="button"
       accessibilityLabel={`Profile. ${profile.name}, level ${info.level}, ${info.xpIntoLevel} of ${info.xpForNext} XP`}
-      style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+      style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border, borderBottomColor: palette.edge, borderBottomWidth: 4 }]}>
       <View style={[styles.avatar, { backgroundColor: palette.primary }]}>
         <AppText variant="title" color={palette.onPrimary}>
           {profile.name.charAt(0).toUpperCase()}

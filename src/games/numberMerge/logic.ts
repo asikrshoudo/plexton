@@ -1,118 +1,97 @@
 import { createRng, mixSeed } from '../../engine/rng';
 
-export type Direction = 'up' | 'down' | 'left' | 'right';
-export const DIRECTIONS: readonly Direction[] = ['down', 'left', 'right', 'up'];
-
 export type Tile = { id: number; value: number; row: number; col: number };
 
 export type BoardState = {
   size: number;
   seed: number;
+  pool: readonly number[];
   tiles: Tile[];
   score: number;
   moves: number;
   nextId: number;
 };
 
-export type MoveResult = { state: BoardState; moved: boolean; gained: number };
+export type MergeResult = { state: BoardState; ok: boolean; gained: number };
+
+// The value of the tile spawned with a given id depends only on (seed, id), never on the
+// board layout, so the whole sequence is known in advance: the solver and the UI preview use it.
+export function spawnValue(seed: number, id: number, pool: readonly number[]): number {
+  const r = createRng(mixSeed(seed, id)).next();
+  if (r < 0.7) return pool[0];
+  return pool[1 + Math.floor(((r - 0.7) / 0.3) * (pool.length - 1))];
+}
 
 function emptyCells(size: number, tiles: readonly Tile[]): number[] {
   const occupied = new Set(tiles.map((t) => t.row * size + t.col));
   const out: number[] = [];
-  for (let i = 0; i < size * size; i += 1) {
-    if (!occupied.has(i)) out.push(i);
-  }
+  for (let i = 0; i < size * size; i += 1) if (!occupied.has(i)) out.push(i);
   return out;
 }
 
-// Spawn position/value depend only on (seed, nextId), so a level is fully reproducible.
-export function spawnTile(state: BoardState): BoardState {
+export function spawnTile(state: BoardState, near?: { row: number; col: number }): BoardState {
   const empties = emptyCells(state.size, state.tiles);
   if (empties.length === 0) return state;
+
   const rng = createRng(mixSeed(state.seed, state.nextId));
-  const cell = empties[rng.int(empties.length)];
-  const value = rng.next() < 0.9 ? 2 : 4;
+  rng.next(); // first draw is the value (see spawnValue)
+
+  let candidates = empties;
+  if (near) {
+    const adjacent = empties.filter((cell) => {
+      const r = Math.floor(cell / state.size);
+      const c = cell % state.size;
+      return Math.abs(r - near.row) + Math.abs(c - near.col) === 1;
+    });
+    if (adjacent.length > 0) candidates = adjacent;
+  }
+  const cell = candidates[rng.int(candidates.length)];
   const tile: Tile = {
     id: state.nextId,
-    value,
+    value: spawnValue(state.seed, state.nextId, state.pool),
     row: Math.floor(cell / state.size),
     col: cell % state.size,
   };
   return { ...state, tiles: [...state.tiles, tile], nextId: state.nextId + 1 };
 }
 
-export function createInitialState(size: number, seed: number, startTiles: number): BoardState {
-  let state: BoardState = { size, seed, tiles: [], score: 0, moves: 0, nextId: 1 };
+export function createInitialState(size: number, seed: number, pool: readonly number[], startTiles: number): BoardState {
+  let state: BoardState = { size, seed, pool, tiles: [], score: 0, moves: 0, nextId: 1 };
   for (let i = 0; i < startTiles; i += 1) state = spawnTile(state);
   return state;
 }
 
-export function move(state: BoardState, dir: Direction): MoveResult {
-  const { size } = state;
-  const horizontal = dir === 'left' || dir === 'right';
-  const forward = dir === 'left' || dir === 'up';
+// Drag `fromId` onto `toId`. Only equal values merge; the merged tile stays where `toId` was.
+export function mergeTiles(state: BoardState, fromId: number, toId: number): MergeResult {
+  const from = state.tiles.find((t) => t.id === fromId);
+  const to = state.tiles.find((t) => t.id === toId);
+  if (!from || !to || from.id === to.id || from.value !== to.value) return { state, ok: false, gained: 0 };
 
-  const lines: Tile[][] = Array.from({ length: size }, () => []);
-  for (const t of state.tiles) lines[horizontal ? t.row : t.col].push(t);
+  const value = to.value * 2;
+  const tiles = state.tiles.filter((t) => t.id !== fromId).map((t) => (t.id === toId ? { ...t, value } : t));
+  const merged: BoardState = { ...state, tiles, score: state.score + value, moves: state.moves + 1 };
+  return { state: spawnTile(merged, { row: to.row, col: to.col }), ok: true, gained: value };
+}
 
-  const next: Tile[] = [];
-  let gained = 0;
-  let moved = false;
+// Moving a tile to an empty cell is free: it is not a move and spawns nothing.
+export function moveTile(state: BoardState, id: number, row: number, col: number): BoardState {
+  if (row < 0 || col < 0 || row >= state.size || col >= state.size) return state;
+  if (state.tiles.some((t) => t.row === row && t.col === col)) return state;
+  if (!state.tiles.some((t) => t.id === id)) return state;
+  return { ...state, tiles: state.tiles.map((t) => (t.id === id ? { ...t, row, col } : t)) };
+}
 
-  for (let li = 0; li < size; li += 1) {
-    const line = lines[li].slice().sort((a, b) => {
-      const pa = horizontal ? a.col : a.row;
-      const pb = horizontal ? b.col : b.row;
-      return forward ? pa - pb : pb - pa;
-    });
-
-    const out: Tile[] = [];
-    let lastMerged = false;
-    for (const t of line) {
-      const last = out[out.length - 1];
-      if (last && !lastMerged && last.value === t.value) {
-        out[out.length - 1] = { ...last, value: last.value * 2 };
-        gained += last.value * 2;
-        lastMerged = true;
-        moved = true;
-      } else {
-        out.push({ ...t });
-        lastMerged = false;
-      }
-    }
-
-    out.forEach((t, k) => {
-      const idx = forward ? k : size - 1 - k;
-      const row = horizontal ? li : idx;
-      const col = horizontal ? idx : li;
-      if (t.row !== row || t.col !== col) moved = true;
-      next.push({ ...t, row, col });
-    });
+export function canMerge(state: BoardState): boolean {
+  const seen = new Set<number>();
+  for (const t of state.tiles) {
+    if (seen.has(t.value)) return true;
+    seen.add(t.value);
   }
-
-  if (!moved) return { state, moved: false, gained: 0 };
-
-  const slid: BoardState = { ...state, tiles: next, score: state.score + gained, moves: state.moves + 1 };
-  return { state: spawnTile(slid), moved: true, gained };
+  return false;
 }
 
 export function maxTile(state: BoardState): number {
   let best = 0;
   for (const t of state.tiles) if (t.value > best) best = t.value;
   return best;
-}
-
-export function canMove(state: BoardState): boolean {
-  const { size } = state;
-  if (state.tiles.length < size * size) return true;
-  const grid = new Map<number, number>();
-  for (const t of state.tiles) grid.set(t.row * size + t.col, t.value);
-  for (let r = 0; r < size; r += 1) {
-    for (let c = 0; c < size; c += 1) {
-      const v = grid.get(r * size + c);
-      if (c + 1 < size && grid.get(r * size + c + 1) === v) return true;
-      if (r + 1 < size && grid.get((r + 1) * size + c) === v) return true;
-    }
-  }
-  return false;
 }

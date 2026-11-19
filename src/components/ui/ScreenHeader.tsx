@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { MIN_TOUCH, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
+import { Icon } from './Icon';
 import { PressableScale } from './PressableScale';
 
 export function ScreenHeader({ title }: { title: string }) {
@@ -17,8 +18,8 @@ export function ScreenHeader({ title }: { title: string }) {
         onPress={goBack}
         accessibilityRole="button"
         accessibilityLabel="Go back"
-        style={[styles.back, { backgroundColor: palette.surface, borderColor: palette.border }]}>
-        <AppText variant="title">←</AppText>
+        style={[styles.back, { backgroundColor: palette.surface, borderColor: palette.border, borderBottomColor: palette.edge }]}>
+        <Icon name="back" />
       </PressableScale>
       <AppText variant="title" accessibilityRole="header" style={styles.title} numberOfLines={1}>
         {title}
@@ -34,6 +35,7 @@ const styles = StyleSheet.create({
     height: MIN_TOUCH,
     borderRadius: MIN_TOUCH / 2,
     borderWidth: 1,
+    borderBottomWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

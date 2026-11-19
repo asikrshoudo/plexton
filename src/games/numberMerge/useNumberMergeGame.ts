@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameResult } from '@/engine/types';
 import { generateNumberMergeLevel, type NumberMergeLevel } from './generator';
-import { canMove, createInitialState, maxTile, move, type BoardState, type Direction } from './logic';
+import { canMerge, createInitialState, maxTile, mergeTiles, moveTile, type BoardState } from './logic';
 
 export type Phase = 'loading' | 'playing' | 'won' | 'lost' | 'error';
 
@@ -23,7 +23,7 @@ export function useNumberMergeGame({ level, tier, onFinish }: Options) {
       try {
         const g = generateNumberMergeLevel(level, tier);
         setGenerated(g);
-        setBoard(createInitialState(g.config.size, g.config.seed, g.config.startTiles));
+        setBoard(createInitialState(g.config.size, g.config.seed, g.config.pool, g.config.startTiles));
         startedAt.current = Date.now();
         setPhase('playing');
       } catch {
@@ -33,16 +33,24 @@ export function useNumberMergeGame({ level, tier, onFinish }: Options) {
     return () => clearTimeout(id);
   }, [level, tier]);
 
-  const swipe = useCallback(
-    (dir: Direction) => {
+  // Drop tile `fromId` on cell (row, col): free move onto an empty cell, merge onto an equal tile.
+  const drop = useCallback(
+    (fromId: number, row: number, col: number) => {
       if (phase !== 'playing' || !board || !generated) return;
-      const r = move(board, dir);
-      if (!r.moved) return;
+
+      const target = board.tiles.find((t) => t.row === row && t.col === col);
+      if (!target) {
+        setBoard(moveTile(board, fromId, row, col));
+        return;
+      }
+
+      const r = mergeTiles(board, fromId, target.id);
+      if (!r.ok) return;
       setBoard(r.state);
 
       const { config } = generated;
       const won = maxTile(r.state) >= config.target;
-      const lost = !won && (r.state.moves >= config.maxMoves || !canMove(r.state));
+      const lost = !won && (r.state.moves >= config.maxMoves || !canMerge(r.state));
       if (!won && !lost) return;
 
       setPhase(won ? 'won' : 'lost');
@@ -61,5 +69,5 @@ export function useNumberMergeGame({ level, tier, onFinish }: Options) {
     [phase, board, generated, onFinish],
   );
 
-  return { phase, generated, board, swipe };
+  return { phase, generated, board, drop };
 }
