@@ -41,6 +41,7 @@ export interface PlayerPerformance {
   moveLimit: number | null;
   hintsUsed: number;
   retries: number;
+  parMs?: number;
 }
 
 export interface GameSession {
@@ -61,4 +62,5 @@ export interface GameResult {
   durationMs: number;
   hintsUsed: number;
   xpEarned: number;
+  parMs?: number;
 }

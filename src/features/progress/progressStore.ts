@@ -42,6 +42,7 @@ export function recordResult(result: GameResult): { progress: StoredProgress; xp
     moveLimit: result.moveLimit,
     hintsUsed: result.hintsUsed,
     retries: prev.retries,
+    parMs: result.parMs,
   };
   const history = [...prev.history, performance].slice(-10);
   const progress: StoredProgress = {

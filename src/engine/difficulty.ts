@@ -11,10 +11,16 @@ export function clampTier(tier: number): number {
   return Math.max(MIN_TIER, Math.min(MAX_TIER, Math.round(tier)));
 }
 
-// Higher = player is comfortably ahead. Range roughly -1.3 .. 1.5.
+// Higher = player is comfortably ahead. Range roughly -1.5 .. 1.5.
 export function scoreAttempt(p: PlayerPerformance): number {
   let s = p.won ? 1 : -1;
   if (p.won && p.hintsUsed === 0 && p.moveLimit !== null && p.moves <= p.moveLimit * 0.6) s += 0.5;
+  if (p.won && p.parMs !== undefined && p.parMs > 0) {
+    const ratio = p.durationMs / p.parMs;
+    if (ratio <= 1) s += 0.5;
+    else if (ratio >= 3.5) s -= 1.5;
+    else if (ratio >= 2) s -= 0.5;
+  }
   if (p.hintsUsed > 0) s -= 0.25 * Math.min(p.hintsUsed, 3);
   if (p.retries >= 3) s -= 0.3;
   return s;
