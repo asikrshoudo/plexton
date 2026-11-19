@@ -47,7 +47,7 @@ describe('colorFlow logic', () => {
   });
 
   it('follows a finger that skipped cells', () => {
-    const s = draw(createState(3, [[0, 8], [1, 7]]), 0, [0, 2]);
+    const s = draw(createState(3, [[0, 8], [3, 5]]), 0, [0, 2]);
     expect(s.paths[0].length).toBeGreaterThan(1);
   });
 });

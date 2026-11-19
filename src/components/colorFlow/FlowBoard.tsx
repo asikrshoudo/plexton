@@ -36,6 +36,7 @@ export function FlowBoard({ state, onBegin, onMove, onEnd }: Props) {
       const row = Math.min(g.size - 1, Math.max(0, Math.floor(y / g.cell)));
       return row * g.size + col;
     };
+    // eslint-disable-next-line react-hooks/refs
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,

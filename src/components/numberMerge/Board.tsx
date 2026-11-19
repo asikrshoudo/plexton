@@ -21,6 +21,7 @@ export function Board({ board, onSwipe }: Props) {
 
   const responder = useMemo(
     () =>
+    // eslint-disable-next-line react-hooks/refs
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
