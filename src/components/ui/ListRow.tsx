@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
+import { Icon } from './Icon';
 import { PressableScale } from './PressableScale';
 
 type Props = {
@@ -26,7 +27,11 @@ export function ListRow({ label, value, description, onPress, disabled = false, 
       accessibilityState={{ disabled: !pressable && disabled, selected }}
       style={[
         styles.row,
-        { backgroundColor: palette.surface, borderColor: selected ? palette.primary : palette.border, opacity: disabled ? 0.55 : 1 },
+        {
+          backgroundColor: selected ? palette.primarySoft : palette.surface,
+          borderColor: selected ? palette.primary : palette.border,
+          opacity: disabled ? 0.55 : 1,
+        },
       ]}>
       <View style={styles.text}>
         <AppText variant="heading">{label}</AppText>
@@ -37,21 +42,21 @@ export function ListRow({ label, value, description, onPress, disabled = false, 
         ) : null}
       </View>
       {value ? (
-        <AppText variant="label" tone="muted">
+        <AppText variant="label" tone="muted" style={styles.value}>
           {value}
         </AppText>
       ) : null}
       {selected ? <AppText variant="heading" tone="primary">✓</AppText> : null}
-      {pressable ? <AppText variant="heading" tone="muted">›</AppText> : null}
+      {pressable ? <Icon name="chevron" size={18} color={palette.textMuted} /> : null}
     </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: MIN_TOUCH + 16,
+    minHeight: MIN_TOUCH + 12,
     borderRadius: radius.md,
-    borderWidth: 1.5,
+    borderWidth: 1,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     flexDirection: 'row',
@@ -59,4 +64,5 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   text: { flex: 1, gap: 2 },
+  value: { flexShrink: 1, textAlign: 'right' },
 });

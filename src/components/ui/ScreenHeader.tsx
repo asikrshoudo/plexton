@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { MIN_TOUCH, spacing } from '@/theme/tokens';
+import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { PressableScale } from './PressableScale';
 
-export function ScreenHeader({ title }: { title: string }) {
+export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const { palette } = useTheme();
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -18,12 +18,19 @@ export function ScreenHeader({ title }: { title: string }) {
         onPress={goBack}
         accessibilityRole="button"
         accessibilityLabel="Go back"
-        style={[styles.back, { backgroundColor: palette.surface, borderColor: palette.border, borderBottomColor: palette.edge }]}>
-        <Icon name="back" />
+        style={[styles.back, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+        <Icon name="back" size={22} color={palette.text} />
       </PressableScale>
-      <AppText variant="title" accessibilityRole="header" style={styles.title} numberOfLines={1}>
-        {title}
-      </AppText>
+      <View style={styles.text}>
+        <AppText variant="title" accessibilityRole="header" numberOfLines={1}>
+          {title}
+        </AppText>
+        {subtitle ? (
+          <AppText variant="label" tone="muted" numberOfLines={1}>
+            {subtitle}
+          </AppText>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -33,11 +40,10 @@ const styles = StyleSheet.create({
   back: {
     width: MIN_TOUCH,
     height: MIN_TOUCH,
-    borderRadius: MIN_TOUCH / 2,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderBottomWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { flex: 1 },
+  text: { flex: 1, gap: 2 },
 });

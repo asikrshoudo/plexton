@@ -1,17 +1,22 @@
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
-import { radius, spacing } from '@/theme/tokens';
+import { elevation, radius, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
-type Props = ViewProps & { style?: StyleProp<ViewStyle> };
+type Props = ViewProps & { style?: StyleProp<ViewStyle>; muted?: boolean };
 
-export function Card({ style, ...rest }: Props) {
+export function Card({ style, muted = false, ...rest }: Props) {
   const { palette } = useTheme();
   return (
     <View
       {...rest}
       style={[
         styles.card,
-        { backgroundColor: palette.surface, borderColor: palette.border, borderBottomColor: palette.edge },
+        elevation.card,
+        {
+          backgroundColor: muted ? palette.surfaceAlt : palette.surface,
+          borderColor: palette.border,
+          shadowColor: palette.edge,
+        },
         style,
       ]}
     />
@@ -22,7 +27,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderBottomWidth: 4,
     padding: spacing.lg,
   },
 });

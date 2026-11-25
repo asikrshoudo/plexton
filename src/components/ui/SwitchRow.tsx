@@ -33,8 +33,9 @@ export function SwitchRow({ label, description, value, onChange }: Props) {
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants">
         <Switch
           value={value}
-          trackColor={{ false: palette.surfaceAlt, true: palette.primary }}
-          thumbColor="#FFFFFF"
+          trackColor={{ false: palette.borderStrong, true: palette.primary }}
+          thumbColor={palette.surface}
+          ios_backgroundColor={palette.borderStrong}
         />
       </View>
     </PressableScale>
@@ -43,7 +44,7 @@ export function SwitchRow({ label, description, value, onChange }: Props) {
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: MIN_TOUCH + 16,
+    minHeight: MIN_TOUCH + 12,
     borderRadius: radius.md,
     borderWidth: 1,
     paddingHorizontal: spacing.lg,

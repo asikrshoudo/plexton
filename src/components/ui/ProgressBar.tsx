@@ -9,13 +9,13 @@ export function ProgressBar({ progress, color }: { progress: number; color?: str
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(pct) }}
-      style={[styles.track, { backgroundColor: palette.surfaceAlt }]}>
+      style={[styles.track, { backgroundColor: palette.surfaceAlt, borderColor: palette.border }]}>
       <View style={[styles.fill, { width: `${pct}%`, backgroundColor: color ?? palette.primary }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  track: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
+  track: { height: 10, borderRadius: radius.pill, overflow: 'hidden', borderWidth: 1 },
   fill: { height: '100%', borderRadius: radius.pill },
 });

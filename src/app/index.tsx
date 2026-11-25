@@ -8,15 +8,17 @@ import { SectionLabel } from '@/components/ui/SectionLabel';
 import { GAMES } from '@/games/registry';
 import { spacing } from '@/theme/tokens';
 
+const RELEASE_GAMES = GAMES.filter((game) => game.id === 'numberMerge' || game.id === 'colorFlow');
+
 export default function HomeScreen() {
   return (
-    <Screen>
+    <Screen contentStyle={styles.content}>
       <HomeHeader />
       <PlayerCard />
       <DailyCard />
       <SectionLabel>Games</SectionLabel>
       <View style={styles.grid}>
-        {GAMES.map((game) => (
+        {RELEASE_GAMES.map((game) => (
           <GameCard key={game.id} game={game} />
         ))}
       </View>
@@ -25,5 +27,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  content: { gap: spacing.xl },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
 });
