@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { radius } from '@/theme/tokens';
+import { radius, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 export function ProgressBar({ progress, color }: { progress: number; color?: string }) {
@@ -16,6 +16,6 @@ export function ProgressBar({ progress, color }: { progress: number; color?: str
 }
 
 const styles = StyleSheet.create({
-  track: { height: 10, borderRadius: radius.pill, overflow: 'hidden', borderWidth: 1 },
+  track: { height: 10, borderRadius: radius.pill, overflow: 'hidden', borderWidth: stroke.hairline },
   fill: { height: '100%', borderRadius: radius.pill },
 });

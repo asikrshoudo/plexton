@@ -1,9 +1,9 @@
-// To add a language: add an entry here, set available: true, and add its
-// string table when the localisation layer lands. Settings only stores the code.
-export type LanguageCode = 'en-US';
+// Planned languages are kept visible for roadmap clarity. Only available
+// languages can be selected; UI copy remains English until localization lands.
+export type LanguageCode = 'en-US' | 'bn' | 'hi' | 'es';
 
 export type LanguageOption = {
-  code: string;
+  code: LanguageCode;
   label: string;
   native: string;
   available: boolean;

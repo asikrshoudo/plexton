@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { BoardState } from '@/games/numberMerge/logic';
-import { radius, spacing } from '@/theme/tokens';
+import { motion, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { TileFace, TileView } from './TileView';
 
@@ -15,149 +15,174 @@ type Props = {
   onDrop: (tileId: number, row: number, col: number) => void;
 };
 
+function cellForValue(value: number): string {
+  return String.fromCharCode(65 + Math.round(Math.log2(Math.max(2, value)) - 1));
+}
+
 export function Board({ board, disabled = false, onDrop }: Props) {
   const { palette } = useTheme();
   const { width } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
   const { size } = board;
   const boardSize = Math.min(width - spacing.lg * 2, 420);
   const cell = (boardSize - GAP * (size + 1)) / size;
-  const lift = cell * 0.55; // the dragged tile floats above the finger so it stays visible
+  const lift = cell * 0.55;
 
   const [dragId, setDragId] = useState<number | null>(null);
   const [hover, setHover] = useState<Cell | null>(null);
   const fx = useSharedValue(0);
   const fy = useSharedValue(0);
 
-  const live = useRef({ board, disabled, onDrop, cell, size, lift });
-  const drag = useRef<{ id: number | null; ox: number; oy: number; at: Cell | null }>({ id: null, ox: 0, oy: 0, at: null });
-
+  const live = useRef({ board, disabled, cell, size, onDrop, dragId: null as number | null, hover: null as Cell | null });
   useEffect(() => {
-    live.current = { board, disabled, onDrop, cell, size, lift };
+    live.current.board = board;
+    live.current.disabled = disabled;
+    live.current.cell = cell;
+    live.current.size = size;
+    live.current.onDrop = onDrop;
   });
+  useEffect(() => {
+    live.current.hover = hover;
+  }, [hover]);
+  const effectiveDragId = dragId !== null && board.tiles.some((t) => t.id === dragId) ? dragId : null;
+  useEffect(() => {
+    live.current.dragId = effectiveDragId;
+  }, [effectiveDragId]);
 
-  const responder = useMemo(() => {
-    const locate = (x: number, y: number): Cell | null => {
-      const L = live.current;
-      const step = L.cell + GAP;
-      const col = Math.floor((x - GAP / 2) / step);
-      const row = Math.floor((y - GAP / 2) / step);
-      if (col < 0 || row < 0 || col >= L.size || row >= L.size) return null;
-      return { row, col };
-    };
-
-    const finish = (dropIt: boolean) => {
-      const d = drag.current;
-      if (d.id === null) return;
-      const { id, at } = d;
-      drag.current = { id: null, ox: 0, oy: 0, at: null };
-      setDragId(null);
-      setHover(null);
-      if (dropIt && at) live.current.onDrop(id, at.row, at.col);
-    };
-
-    // eslint-disable-next-line react-hooks/refs
-    return PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (e) => {
-        const L = live.current;
-        if (L.disabled) return;
-        const x = e.nativeEvent.locationX;
-        const y = e.nativeEvent.locationY;
-        const from = locate(x, y);
-        const tile = from ? L.board.tiles.find((t) => t.row === from.row && t.col === from.col) : undefined;
+  // eslint-disable-next-line react-hooks/refs -- gesture handlers intentionally read refs and shared values at callback time
+  const [responder] = useState(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !live.current.disabled && live.current.dragId === null,
+      onMoveShouldSetPanResponder: (_, g) =>
+        !live.current.disabled && live.current.dragId !== null && (Math.abs(g.dx) > 2 || Math.abs(g.dy) > 2),
+      onPanResponderGrant: (_, g) => {
+        const { board: b, cell: cs, size: n } = live.current;
+        const col = Math.floor((g.x0 - GAP) / (cs + GAP));
+        const row = Math.floor((g.y0 - GAP) / (cs + GAP));
+        if (row < 0 || row >= n || col < 0 || col >= n) return;
+        const tile = b.tiles.find((t) => t.row === row && t.col === col);
         if (!tile) return;
-        const at = locate(x, y - L.lift);
-        drag.current = { id: tile.id, ox: x, oy: y, at };
-        fx.set(x);
-        fy.set(y - L.lift);
+        live.current.dragId = tile.id;
         setDragId(tile.id);
-        setHover(at);
+        setHover({ row, col });
+        fx.value = 0;
+        fy.value = 0;
       },
-      onPanResponderMove: (_e, g) => {
-        const d = drag.current;
-        if (d.id === null) return;
-        const x = d.ox + g.dx;
-        const y = d.oy + g.dy - live.current.lift;
-        fx.set(x);
-        fy.set(y);
-        const at = locate(x, y);
-        if (at?.row !== d.at?.row || at?.col !== d.at?.col) {
-          d.at = at;
-          setHover(at);
-        }
+      onPanResponderMove: (_, g) => {
+        const { cell: cs, size: n, board: b, dragId: id } = live.current;
+        if (id === null) return;
+        fx.value = g.dx;
+        fy.value = g.dy - lift;
+        const src = b.tiles.find((t) => t.id === id);
+        if (!src) return;
+        const col = Math.min(n - 1, Math.max(0, Math.floor((src.col * (cs + GAP) + GAP + g.dx + cs / 2) / (cs + GAP))));
+        const row = Math.min(n - 1, Math.max(0, Math.floor((src.row * (cs + GAP) + GAP + g.dy + cs / 2) / (cs + GAP))));
+        setHover((h) => (h && h.row === row && h.col === col ? h : { row, col }));
       },
-      onPanResponderRelease: () => finish(true),
-      onPanResponderTerminate: () => finish(false),
-    });
-  }, [fx, fy]);
+      onPanResponderRelease: () => {
+        const { dragId: id, hover: h, onDrop: drop } = live.current;
+        if (id !== null && h) drop(id, h.row, h.col);
+        setDragId(null);
+        setHover(null);
+        fx.value = 0;
+        fy.value = 0;
+      },
+      onPanResponderTerminate: () => {
+        setDragId(null);
+        setHover(null);
+        fx.value = 0;
+        fy.value = 0;
+      },
+    }),
+  );
 
-  const overlay = useAnimatedStyle(() => ({
-    transform: [{ translateX: fx.get() - cell / 2 }, { translateY: fy.get() - cell / 2 }, { scale: 1.08 }],
+  const floatStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: fx.value },
+      { translateY: fy.value },
+      { scale: withTiming(1.04, { duration: reducedMotion ? 0 : motion.duration.fast }) },
+    ],
   }));
 
-  const dragged = dragId === null ? undefined : board.tiles.find((t) => t.id === dragId);
-  const hoverTile = hover ? board.tiles.find((t) => t.row === hover.row && t.col === hover.col) : undefined;
-  const validMerge = !!dragged && !!hoverTile && hoverTile.id !== dragged.id && hoverTile.value === dragged.value;
-
-  const slots = [];
-  for (let r = 0; r < size; r += 1) {
-    for (let c = 0; c < size; c += 1) {
-      slots.push(
-        <View
-          key={`${r}-${c}`}
-          style={{
-            position: 'absolute',
-            left: GAP + c * (cell + GAP),
-            top: GAP + r * (cell + GAP),
-            width: cell,
-            height: cell,
-            borderRadius: cell * 0.2,
-            backgroundColor: palette.bg,
-          }}
-        />,
-      );
-    }
-  }
+  const dragTile = effectiveDragId === null ? undefined : board.tiles.find((t) => t.id === effectiveDragId);
 
   return (
     <View
-      {...responder.panHandlers}
-      accessible
-      accessibilityLabel={`Number Merge board, ${board.tiles.length} tiles`}
-      accessibilityHint="Drag a tile onto a tile with the same number to merge them"
-      style={[styles.board, { width: boardSize, height: boardSize, backgroundColor: palette.surfaceAlt, borderBottomColor: palette.edge }]}>
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        {slots}
-        {hover && dragged ? (
+      accessibilityLabel={`Number Merge board, ${size} by ${size}. Drag a tile onto an equal tile to merge, or onto an empty space to move.`}
+      style={[
+        styles.board,
+        {
+          width: boardSize,
+          height: boardSize,
+          padding: GAP,
+          backgroundColor: palette.surfaceAlt,
+          borderColor: palette.border,
+          shadowColor: palette.ink,
+        },
+      ]}
+      {...responder.panHandlers}>
+      {Array.from({ length: size * size }, (_, i) => {
+        const row = Math.floor(i / size);
+        const col = i % size;
+        const hot = hover?.row === row && hover?.col === col && effectiveDragId !== null;
+        return (
           <View
-            style={{
-              position: 'absolute',
-              left: GAP / 2 + hover.col * (cell + GAP),
-              top: GAP / 2 + hover.row * (cell + GAP),
-              width: cell + GAP,
-              height: cell + GAP,
-              borderRadius: cell * 0.26,
-              borderWidth: 3,
-              borderColor: validMerge ? palette.success : hoverTile ? 'transparent' : palette.textMuted,
-            }}
+            key={i}
+            importantForAccessibility="no-hide-descendants"
+            style={[
+              styles.cell,
+              {
+                width: cell,
+                height: cell,
+                borderRadius: cell * 0.2,
+                backgroundColor: hot ? palette.primarySoft : palette.bgElevated,
+                borderColor: hot ? palette.borderStrong : palette.border,
+              },
+            ]}
           />
-        ) : null}
-        {board.tiles.map((t) => (
-          <TileView key={t.id} value={t.value} row={t.row} col={t.col} cell={cell} gap={GAP} dim={t.id === dragId} />
-        ))}
-        {dragged ? (
-          <Animated.View style={[styles.floating, { width: cell, height: cell }, overlay]}>
-            <TileFace value={dragged.value} cell={cell} />
-          </Animated.View>
-        ) : null}
-      </View>
+        );
+      })}
+      {board.tiles.map((t) => (
+        <TileView
+          key={t.id}
+          value={t.value}
+          row={t.row}
+          col={t.col}
+          cell={cell}
+          gap={GAP}
+          dim={t.id === effectiveDragId}
+          label={cellForValue(t.value)}
+        />
+      ))}
+      {dragTile ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: 'absolute',
+              left: GAP + dragTile.col * (cell + GAP),
+              top: GAP + dragTile.row * (cell + GAP),
+              zIndex: 20,
+            },
+            floatStyle,
+          ]}>
+          <TileFace value={dragTile.value} cell={cell} label={cellForValue(dragTile.value)} />
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  board: { borderRadius: radius.lg, borderBottomWidth: 5, alignSelf: 'center' },
-  floating: { position: 'absolute', left: 0, top: 0 },
+  board: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GAP,
+    borderRadius: radius.xl,
+    borderWidth: stroke.hairline,
+    alignSelf: 'center',
+  },
+  cell: {
+    borderWidth: stroke.hairline,
+  },
 });

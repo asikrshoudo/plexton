@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { HeartsProvider } from '@/features/hearts/HeartsProvider';
 import { ProfileProvider } from '@/features/profile/ProfileProvider';
 import { SettingsProvider } from '@/features/settings/SettingsProvider';
 import { useTheme } from '@/theme/useTheme';
@@ -35,7 +36,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SettingsProvider>
         <ProfileProvider>
-          <RootStack />
+          <HeartsProvider>
+            <RootStack />
+          </HeartsProvider>
         </ProfileProvider>
       </SettingsProvider>
     </SafeAreaProvider>

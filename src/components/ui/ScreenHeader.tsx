@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { MIN_TOUCH, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -22,11 +22,11 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
         <Icon name="back" size={22} color={palette.text} />
       </PressableScale>
       <View style={styles.text}>
-        <AppText variant="title" accessibilityRole="header" numberOfLines={1}>
+        <AppText variant="title" accessibilityRole="header" numberOfLines={2}>
           {title}
         </AppText>
         {subtitle ? (
-          <AppText variant="label" tone="muted" numberOfLines={1}>
+          <AppText variant="label" tone="muted" numberOfLines={2}>
             {subtitle}
           </AppText>
         ) : null}
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     width: MIN_TOUCH,
     height: MIN_TOUCH,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     alignItems: 'center',
     justifyContent: 'center',
   },

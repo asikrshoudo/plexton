@@ -1,5 +1,5 @@
 import { Text, type TextProps } from 'react-native';
-import { typography } from '@/theme/tokens';
+import { MAX_FONT_SIZE_MULTIPLIER, typography } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 type Tone = 'default' | 'muted' | 'subtle' | 'primary' | 'onPrimary' | 'success' | 'danger' | 'warning';
@@ -22,5 +22,11 @@ export function AppText({ variant = 'body', tone = 'default', color, style, ...r
     danger: palette.danger,
     warning: palette.warning,
   };
-  return <Text {...rest} maxFontSizeMultiplier={1.35} style={[typography[variant], { color: color ?? tones[tone] }, style]} />;
+  return (
+    <Text
+      {...rest}
+      maxFontSizeMultiplier={MAX_FONT_SIZE_MULTIPLIER}
+      style={[typography[variant], { color: color ?? tones[tone] }, style]}
+    />
+  );
 }

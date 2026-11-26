@@ -36,6 +36,7 @@ export function Screen({ title, subtitle, children, scroll = true, contentStyle 
       style={{ flex: 1, backgroundColor: palette.bg }}
       contentContainerStyle={[padding, { gap: spacing.lg, flexGrow: 1 }, contentStyle]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       showsVerticalScrollIndicator={false}>
       {title ? <ScreenHeader title={title} subtitle={subtitle} /> : null}
       {children}

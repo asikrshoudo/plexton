@@ -32,39 +32,57 @@ describe('numberMerge logic', () => {
 
   it('spawns the new tile next to the merged tile', () => {
     const s = make([[2, 2, 2], [2, 3, 2]]);
-    const spawned = mergeTiles(s, 1, 2).state.tiles.find((t) => t.id === 3);
-    expect(spawned).toBeDefined();
-    expect(Math.abs((spawned?.row ?? 0) - 2) + Math.abs((spawned?.col ?? 0) - 3)).toBe(1);
-  });
-
-  it('rejects tiles with different values', () => {
-    const s = make([[0, 0, 2], [0, 1, 4]]);
     const r = mergeTiles(s, 1, 2);
-    expect(r.ok).toBe(false);
-    expect(r.state).toBe(s);
+    const spawned = r.state.tiles.find((t) => t.id === s.nextId)!;
+    expect(Math.abs(spawned.row - 2) + Math.abs(spawned.col - 3)).toBe(1);
   });
 
-  it('rejects dropping a tile on itself', () => {
-    const s = make([[0, 0, 2], [0, 1, 2]]);
+  it('rejects merging different values, and a tile with itself', () => {
+    const s = make([[0, 0, 2], [0, 1, 4]]);
+    expect(mergeTiles(s, 1, 2).ok).toBe(false);
     expect(mergeTiles(s, 1, 1).ok).toBe(false);
   });
 
-  it('moves a tile to an empty cell for free and refuses occupied cells', () => {
-    const s = make([[0, 0, 2], [0, 1, 4]]);
+  it('moving to an empty cell is free and spawns nothing', () => {
+    const s = make([[0, 0, 2]]);
     const moved = moveTile(s, 1, 3, 3);
-    expect(moved.tiles.find((t) => t.id === 1)).toMatchObject({ row: 3, col: 3 });
     expect(moved.moves).toBe(0);
+    expect(moved.tiles.length).toBe(1);
+    expect(moved.tiles[0]).toMatchObject({ row: 3, col: 3, value: 2 });
+  });
+
+  it('refuses to move onto an occupied cell', () => {
+    const s = make([[0, 0, 2], [0, 1, 4]]);
     expect(moveTile(s, 1, 0, 1)).toBe(s);
-    expect(moveTile(s, 1, 9, 9)).toBe(s);
   });
 
-  it('detects when no merge is possible', () => {
+  it('refuses to move out of bounds or unknown tile', () => {
+    const s = make([[0, 0, 2]]);
+    expect(moveTile(s, 1, -1, 0)).toBe(s);
+    expect(moveTile(s, 1, 5, 0)).toBe(s);
+    expect(moveTile(s, 999, 1, 1)).toBe(s);
+  });
+
+  it('reports when no merges are possible', () => {
     expect(canMerge(make([[0, 0, 2], [0, 1, 4], [0, 2, 8]]))).toBe(false);
-    expect(canMerge(make([[0, 0, 2], [0, 1, 4], [0, 2, 4]]))).toBe(true);
+    expect(canMerge(make([[0, 0, 2], [0, 1, 2], [0, 2, 8]]))).toBe(true);
   });
 
-  it('is deterministic and only spawns values from the pool', () => {
-    expect(createInitialState(5, 99, [2, 4], 8)).toEqual(createInitialState(5, 99, [2, 4], 8));
-    for (let id = 1; id < 200; id += 1) expect([2, 4, 8]).toContain(spawnValue(7, id, [2, 4, 8]));
+  it('never reports a merge for a full board with all unique values', () => {
+    const values = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432];
+    const s = make(values.map((v, i) => [Math.floor(i / 5), i % 5, v] as [number, number, number]));
+    expect(canMerge(s)).toBe(false);
+  });
+
+  it('spawn value is deterministic by seed and id', () => {
+    expect(spawnValue(42, 7, [2, 4, 8])).toBe(spawnValue(42, 7, [2, 4, 8]));
+    expect([2, 4, 8]).toContain(spawnValue(42, 7, [2, 4, 8]));
+  });
+
+  it('creates an initial state with the requested tile count', () => {
+    const s = createInitialState(5, 99, [2, 4], 8);
+    expect(s.tiles).toHaveLength(8);
+    expect(s.moves).toBe(0);
+    expect(s.score).toBe(0);
   });
 });

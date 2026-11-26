@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { elevation, MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { elevation, MIN_TOUCH, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { PressableScale } from './PressableScale';
@@ -22,6 +22,13 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
       : variant === 'secondary'
         ? palette.surface
         : 'transparent';
+  const borderColor = disabled
+    ? palette.border
+    : variant === 'secondary'
+      ? palette.borderStrong
+      : variant === 'primary'
+        ? base
+        : 'transparent';
   const fg = disabled
     ? palette.textMuted
     : variant === 'primary'
@@ -42,9 +49,10 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
         variant !== 'ghost' ? elevation.press : null,
         {
           backgroundColor: bg,
-          borderColor: variant === 'secondary' ? palette.borderStrong : 'transparent',
-          borderWidth: variant === 'secondary' ? 1 : 0,
-          shadowColor: palette.edge,
+          borderColor,
+          borderWidth: variant === 'ghost' ? 0 : stroke.hairline,
+          shadowColor: palette.ink,
+          opacity: disabled ? 0.72 : 1,
         },
       ]}>
       <AppText variant="label" color={fg} style={styles.label}>
@@ -59,7 +67,7 @@ const styles = StyleSheet.create({
     minHeight: MIN_TOUCH,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

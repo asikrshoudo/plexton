@@ -1,21 +1,21 @@
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
-import { elevation, radius, spacing } from '@/theme/tokens';
+import { elevation, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
-type Props = ViewProps & { style?: StyleProp<ViewStyle>; muted?: boolean };
+type Props = ViewProps & { style?: StyleProp<ViewStyle>; muted?: boolean; elevated?: boolean };
 
-export function Card({ style, muted = false, ...rest }: Props) {
+export function Card({ style, muted = false, elevated = false, ...rest }: Props) {
   const { palette } = useTheme();
   return (
     <View
       {...rest}
       style={[
         styles.card,
-        elevation.card,
+        elevated ? elevation.raised : elevation.card,
         {
           backgroundColor: muted ? palette.surfaceAlt : palette.surface,
-          borderColor: palette.border,
-          shadowColor: palette.edge,
+          borderColor: muted ? palette.border : palette.border,
+          shadowColor: palette.ink,
         },
         style,
       ]}
@@ -26,7 +26,7 @@ export function Card({ style, muted = false, ...rest }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     padding: spacing.lg,
   },
 });

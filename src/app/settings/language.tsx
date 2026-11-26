@@ -8,7 +8,7 @@ export default function LanguageScreen() {
   const { settings, update } = useSettings();
 
   return (
-    <Screen title="Language">
+    <Screen title="Language" subtitle="UI language">
       {LANGUAGES.map((lang) => (
         <ListRow
           key={lang.code}
@@ -16,11 +16,11 @@ export default function LanguageScreen() {
           description={lang.available ? lang.native : `${lang.native} · Coming soon`}
           selected={lang.code === settings.language}
           disabled={!lang.available}
-          onPress={lang.code === 'en-US' ? () => update({ language: 'en-US' }) : undefined}
+          onPress={lang.available ? () => update({ language: lang.code }) : undefined}
         />
       ))}
       <AppText variant="caption" tone="muted">
-        More languages will be added in future updates.
+        English is currently the only available UI language. More languages will appear here when fully supported.
       </AppText>
     </Screen>
   );

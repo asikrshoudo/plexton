@@ -4,4 +4,5 @@ import type { GameId } from './registry';
 export const PLAY_ROUTES: Partial<Record<GameId, string>> = {
   numberMerge: '/play/numberMerge',
   colorFlow: '/play/colorFlow',
+  memoryFlash: '/play/memoryFlash',
 };

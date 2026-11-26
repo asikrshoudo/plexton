@@ -1,5 +1,5 @@
 import { StyleSheet, Switch, View } from 'react-native';
-import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { MIN_TOUCH, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { PressableScale } from './PressableScale';
@@ -15,7 +15,7 @@ export function SwitchRow({ label, description, value, onChange }: Props) {
   const { palette } = useTheme();
   return (
     <PressableScale
-      scaleTo={0.99}
+      scaleTo={0.995}
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
       accessibilityLabel={label}
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   row: {
     minHeight: MIN_TOUCH + 12,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     flexDirection: 'row',

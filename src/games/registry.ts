@@ -18,7 +18,7 @@ export const GAMES: readonly GameMeta[] = [
     tagline: 'Drag, match, grow.',
     description: 'Drag a tile onto an equal one to merge them into a bigger number.',
     glyph: '8',
-    accent: '#FF8A3D',
+    accent: '#C96F3C',
     howToPlay: [
       'Press and hold a tile, then drag it onto a tile with the same number.',
       'Equal tiles merge into one tile with double the value.',
@@ -32,7 +32,7 @@ export const GAMES: readonly GameMeta[] = [
     tagline: 'Connect the dots.',
     description: 'Join matching colored dots with a path that never crosses another.',
     glyph: '≈',
-    accent: '#19B8A6',
+    accent: '#2F7C72',
     howToPlay: [
       'Drag from a dot to its matching partner to draw a path.',
       'Paths cannot overlap or cross each other.',
@@ -46,7 +46,7 @@ export const GAMES: readonly GameMeta[] = [
     tagline: 'Watch. Remember. Repeat.',
     description: 'A pattern flashes for a moment. Remember it and repeat it perfectly.',
     glyph: '?',
-    accent: '#FF5C8A',
+    accent: '#B4556C',
     howToPlay: [
       'Watch the pattern while it is shown.',
       'When it disappears, repeat it from memory.',
@@ -60,7 +60,7 @@ export const GAMES: readonly GameMeta[] = [
     tagline: 'Find the words.',
     description: 'Build valid words from the letters you are given.',
     glyph: 'Aa',
-    accent: '#4C7DFF',
+    accent: '#5A6DA8',
     howToPlay: [
       'Use the given letters to form valid words.',
       'Longer words score more points.',
@@ -73,3 +73,4 @@ export const GAMES: readonly GameMeta[] = [
 export function getGame(id: string | undefined): GameMeta | undefined {
   return GAMES.find((g) => g.id === id);
 }
+

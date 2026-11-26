@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { MIN_TOUCH, radius, spacing, stroke } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -19,7 +19,7 @@ export function ListRow({ label, value, description, onPress, disabled = false, 
   const pressable = !!onPress && !disabled;
   return (
     <PressableScale
-      scaleTo={0.99}
+      scaleTo={0.995}
       disabled={!pressable}
       onPress={onPress}
       accessibilityRole={pressable ? 'button' : 'text'}
@@ -29,7 +29,7 @@ export function ListRow({ label, value, description, onPress, disabled = false, 
         styles.row,
         {
           backgroundColor: selected ? palette.primarySoft : palette.surface,
-          borderColor: selected ? palette.primary : palette.border,
+          borderColor: selected ? palette.borderStrong : palette.border,
           opacity: disabled ? 0.55 : 1,
         },
       ]}>
@@ -47,7 +47,7 @@ export function ListRow({ label, value, description, onPress, disabled = false, 
         </AppText>
       ) : null}
       {selected ? <AppText variant="heading" tone="primary">✓</AppText> : null}
-      {pressable ? <Icon name="chevron" size={18} color={palette.textMuted} /> : null}
+      {pressable ? <Icon name="chevron" size={18} color={palette.textSubtle} /> : null}
     </PressableScale>
   );
 }
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   row: {
     minHeight: MIN_TOUCH + 12,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: stroke.hairline,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     flexDirection: 'row',
