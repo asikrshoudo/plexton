@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MemoryBoard } from '@/components/memoryFlash/MemoryBoard';
 import { MemoryResult } from '@/components/memoryFlash/MemoryResult';
@@ -33,6 +33,9 @@ function MemoryFlashGame({ level, tier, onAgain }: { level: number; tier: number
   const [xpEarned, setXpEarned] = useState(0);
   const [exitOpen, setExitOpen] = useState(false);
   const [wrongCell, setWrongCell] = useState<number | null>(null);
+  const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (wrongTimer.current) clearTimeout(wrongTimer.current); }, []);
 
   const { phase, generated, state, activeCell, input, pause, resume, restart } = useMemoryFlashGame({
     level,
@@ -77,7 +80,8 @@ function MemoryFlashGame({ level, tier, onAgain }: { level: number; tier: number
     const expected = state.sequence[state.input.length];
     if (cell !== expected) {
       setWrongCell(cell);
-      setTimeout(() => setWrongCell(null), 350);
+      if (wrongTimer.current) clearTimeout(wrongTimer.current);
+      wrongTimer.current = setTimeout(() => setWrongCell(null), 350);
     }
     input(cell);
   };

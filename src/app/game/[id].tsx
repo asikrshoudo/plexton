@@ -94,6 +94,11 @@ function Lobby({ game }: { game: GameMeta }) {
               Memory Flash does not use hearts and is always playable.
             </AppText>
           ) : null}
+          {game.id === 'wordGame' ? (
+            <AppText variant="caption" tone="muted">
+              Word Game does not use hearts and is always playable.
+            </AppText>
+          ) : null}
         </>
       ) : (
         <Card muted style={styles.comingSoon}>

@@ -204,7 +204,7 @@
 ## 14. Next approved action (exact)
 
 1. **Await user review of R2 full app shell/navigation redesign.**
-2. After explicit approval, start **R6 - Word Game implementation** only. R5 is complete and awaiting review; do not begin R6 until user explicitly approves R5.
+2. After explicit approval, start **R6 - Word Game implementation** only. R5-R8 autonomous implementation pass completed; physical device QA and CI artifact verification still required.
 
 ## 15. Fresh OpenCode session resume instructions
 

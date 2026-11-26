@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -47,10 +49,20 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
 
+      - name: Name APK artifact
+        id: apk
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          COMMIT=$(git rev-parse --short HEAD)
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -n 1)
+          OUT="plexton-v${VERSION}-${COMMIT}-arm64-v8a.apk"
+          mv "$APK" "android/app/build/outputs/apk/release/$OUT"
+          echo "name=$OUT" >> "$GITHUB_OUTPUT"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: plexton-apk
+          name: ${{ steps.apk.outputs.name }}
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
